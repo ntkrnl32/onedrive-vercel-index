@@ -3,10 +3,10 @@ import type { OdFileObject } from '../../types'
 import { FC, useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { useTranslation } from 'next-i18next'
+import dynamic from 'next/dynamic'
 
 import axios from 'axios'
 import toast from 'react-hot-toast'
-import Plyr from 'plyr-react'
 import { useAsync } from 'react-async-hook'
 import { useClipboard } from 'use-clipboard-copy'
 
@@ -20,6 +20,11 @@ import FourOhFour from '../FourOhFour'
 import Loading from '../Loading'
 import CustomEmbedLinkMenu from '../CustomEmbedLinkMenu'
 
+// Dynamically import Plyr to avoid SSR issues (document is not defined error during build)
+// @ts-ignore - Dynamic import causes type issues but is necessary for SSR
+const Plyr = dynamic(() => import('plyr-react'), { ssr: false })
+
+// Import Plyr CSS - this is safe in Next.js
 import 'plyr-react/plyr.css'
 
 const VideoPlayer: FC<{
@@ -57,13 +62,13 @@ const VideoPlayer: FC<{
   }, [videoUrl, isFlv, mpegts, subtitle])
 
   // Common plyr configs, including the video source and plyr options
-  const plyrSource = {
+  const plyrSource: any = {
     type: 'video',
     title: videoName,
     poster: thumbnail,
     tracks: [{ kind: 'captions', label: videoName, src: '', default: true }],
   }
-  const plyrOptions: Plyr.Options = {
+  const plyrOptions: any = {
     ratio: `${width ?? 16}:${height ?? 9}`,
     fullscreen: { iosNative: true },
   }
@@ -71,7 +76,8 @@ const VideoPlayer: FC<{
     // If the video is not in flv format, we can use the native plyr and add sources directly with the video URL
     plyrSource['sources'] = [{ src: videoUrl }]
   }
-  return <Plyr id="plyr" source={plyrSource as Plyr.SourceInfo} options={plyrOptions} />
+  // @ts-ignore - Type issue with dynamic import
+  return <Plyr id="plyr" source={plyrSource} options={plyrOptions} />
 }
 
 const VideoPreview: FC<{ file: OdFileObject }> = ({ file }) => {
