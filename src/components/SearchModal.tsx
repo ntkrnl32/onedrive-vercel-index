@@ -15,19 +15,19 @@ import { LoadingIcon } from './Loading'
 
 import { getFileIcon } from '../utils/getFileIcon'
 import { fetcher } from '../utils/fetchWithSWR'
-import siteConfig from '../../config/site.config'
 
 /**
  * Extract the searched item's path in field 'parentReference' and convert it to the
  * absolute path represented in onedrive-vercel-index
  *
  * @param path Path returned from the parentReference field of the driveItem
+ * @param baseDirectory The base directory to search from
  * @returns The absolute path of the driveItem in the search result
  */
-function mapAbsolutePath(path: string): string {
+function mapAbsolutePath(path: string, baseDirectory: string): string {
   // path is in the format of '/drive/root:/path/to/file', if baseDirectory is '/' then we split on 'root:',
   // otherwise we split on the user defined 'baseDirectory'
-  const absolutePath = path.split(siteConfig.baseDirectory === '/' ? 'root:' : siteConfig.baseDirectory)
+  const absolutePath = path.split(baseDirectory === '/' ? 'root:' : baseDirectory)
   // path returned by the API may contain #, by doing a decodeURIComponent and then encodeURIComponent we can
   // replace URL sensitive characters such as the # with %23
   return absolutePath.length > 1 // solve https://github.com/spencerwooo/onedrive-vercel-index/issues/539
@@ -42,9 +42,10 @@ function mapAbsolutePath(path: string): string {
  * Implements a debounced search function that returns a promise that resolves to an array of
  * search results.
  *
+ * @param baseDirectory The base directory to search from
  * @returns A react hook for a debounced async search of the drive
  */
-function useDriveItemSearch() {
+function useDriveItemSearch(baseDirectory: string) {
   const [query, setQuery] = useState('')
   const searchDriveItem = async (q: string) => {
     const { data } = await axios.get<OdSearchResult>(`/api/search/?q=${q}`)
@@ -54,7 +55,7 @@ function useDriveItemSearch() {
       item['path'] =
         'path' in item.parentReference
           ? // OneDrive International have the path returned in the parentReference field
-            `${mapAbsolutePath(item.parentReference.path)}/${encodeURIComponent(item.name)}`
+            `${mapAbsolutePath(item.parentReference.path, baseDirectory)}/${encodeURIComponent(item.name)}`
           : // OneDrive for Business/Education does not, so we need extra steps here
             ''
     })
@@ -112,7 +113,7 @@ function SearchResultItemTemplate({
   )
 }
 
-function SearchResultItemLoadRemote({ result }: { result: OdSearchResult[number] }) {
+function SearchResultItemLoadRemote({ result, baseDirectory }: { result: OdSearchResult[number], baseDirectory: string }) {
   const { data, error }: SWRResponse<OdDriveItem, { status: number; message: any }> = useSWR(
     [`/api/item/?id=${result.id}`],
     fetcher
@@ -141,7 +142,7 @@ function SearchResultItemLoadRemote({ result }: { result: OdSearchResult[number]
     )
   }
 
-  const driveItemPath = `${mapAbsolutePath(data.parentReference.path)}/${encodeURIComponent(data.name)}`
+  const driveItemPath = `${mapAbsolutePath(data.parentReference.path, baseDirectory)}/${encodeURIComponent(data.name)}`
   return (
     <SearchResultItemTemplate
       driveItem={result}
@@ -152,10 +153,10 @@ function SearchResultItemLoadRemote({ result }: { result: OdSearchResult[number]
   )
 }
 
-function SearchResultItem({ result }: { result: OdSearchResult[number] }) {
+function SearchResultItem({ result, baseDirectory }: { result: OdSearchResult[number], baseDirectory: string }) {
   if (result.path === '') {
     // path is empty, which means we need to fetch the parentReference to get the path
-    return <SearchResultItemLoadRemote result={result} />
+    return <SearchResultItemLoadRemote result={result} baseDirectory={baseDirectory} />
   } else {
     // path is not an empty string in the search result, such that we can directly render the component as is
     const driveItemPath = decodeURIComponent(result.path)
@@ -173,11 +174,15 @@ function SearchResultItem({ result }: { result: OdSearchResult[number] }) {
 export default function SearchModal({
   searchOpen,
   setSearchOpen,
+  siteConfig,
 }: {
   searchOpen: boolean
   setSearchOpen: Dispatch<SetStateAction<boolean>>
+  siteConfig?: any
 }) {
-  const { query, setQuery, results } = useDriveItemSearch()
+  // Fallback to default config if not provided
+  const config = siteConfig || require('../../config/site.config')
+  const { query, setQuery, results } = useDriveItemSearch(config.baseDirectory)
 
   const { t } = useTranslation()
 
@@ -247,7 +252,7 @@ export default function SearchModal({
                     {results.result.length === 0 ? (
                       <div className="px-4 py-12 text-center text-sm font-medium">{t('Nothing here.')}</div>
                     ) : (
-                      results.result.map(result => <SearchResultItem key={result.id} result={result} />)
+                      results.result.map(result => <SearchResultItem key={result.id} result={result} baseDirectory={config.baseDirectory} />)
                     )}
                   </>
                 )}

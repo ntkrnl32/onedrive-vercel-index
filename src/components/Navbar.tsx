@@ -10,14 +10,16 @@ import { useRouter } from 'next/router'
 import { Fragment, useEffect, useState } from 'react'
 import { useTranslation } from 'next-i18next'
 
-import siteConfig from '../../config/site.config'
 import SearchModal from './SearchModal'
 import SwitchLang from './SwitchLang'
 import useDeviceOS from '../utils/useDeviceOS'
 
-const Navbar = () => {
+const Navbar = ({ siteConfig }: { siteConfig?: any }) => {
   const router = useRouter()
   const os = useDeviceOS()
+  
+  // Fallback to default config if not provided (for backward compatibility)
+  const config = siteConfig || require('../../config/site.config')
 
   const [tokenPresent, setTokenPresent] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
@@ -32,7 +34,7 @@ const Navbar = () => {
 
   useEffect(() => {
     const storedToken = () => {
-      for (const r of siteConfig.protectedRoutes) {
+      for (const r of config.protectedRoutes) {
         if (localStorage.hasOwnProperty(r)) {
           return true
         }
@@ -47,7 +49,7 @@ const Navbar = () => {
   const clearTokens = () => {
     setIsOpen(false)
 
-    siteConfig.protectedRoutes.forEach(r => {
+    config.protectedRoutes.forEach(r => {
       localStorage.removeItem(r)
     })
 
@@ -61,12 +63,12 @@ const Navbar = () => {
     <div className="sticky top-0 z-[100] border-b border-gray-900/10 bg-white bg-opacity-80 backdrop-blur-md dark:border-gray-500/30 dark:bg-gray-900">
       <Toaster />
 
-      <SearchModal searchOpen={searchOpen} setSearchOpen={setSearchOpen} />
+      <SearchModal searchOpen={searchOpen} setSearchOpen={setSearchOpen} siteConfig={config} />
 
       <div className="mx-auto flex w-full items-center justify-between space-x-4 px-4 py-1">
         <Link href="/" passHref className="flex items-center space-x-2 py-2 hover:opacity-80 dark:text-white md:p-2">
-          <Image src={siteConfig.icon} alt="icon" width="25" height="25" priority />
-          <span className="hidden font-bold sm:block">{siteConfig.title}</span>
+          <Image src={config.icon} alt="icon" width="25" height="25" priority />
+          <span className="hidden font-bold sm:block">{config.title}</span>
         </Link>
 
         <div className="flex flex-1 items-center space-x-4 text-gray-700 md:flex-initial">
@@ -89,8 +91,8 @@ const Navbar = () => {
 
           <SwitchLang />
 
-          {siteConfig.links.length !== 0 &&
-            siteConfig.links.map((l: { name: string; link: string }) => (
+          {config.links && config.links.length !== 0 &&
+            config.links.map((l: { name: string; link: string }) => (
               <a
                 key={l.name}
                 href={l.link}
@@ -109,8 +111,8 @@ const Navbar = () => {
               </a>
             ))}
 
-          {siteConfig.email && (
-            <a href={siteConfig.email} className="flex items-center space-x-2 hover:opacity-80 dark:text-white">
+          {config.email && (
+            <a href={config.email} className="flex items-center space-x-2 hover:opacity-80 dark:text-white">
               <FontAwesomeIcon icon={['far', 'envelope']} />
               <span className="hidden text-sm font-medium md:inline-block">{t('Email')}</span>
             </a>

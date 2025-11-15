@@ -35,9 +35,12 @@ export function generateAuthorisationUrl(): string {
 
 // The code returned from the Microsoft OAuth 2.0 authorization URL is a request URL with hostname
 // http://localhost and URL parameter code. This function extracts the code from the request URL
-export function extractAuthCodeFromRedirected(url: string): string {
+export function extractAuthCodeFromRedirected(url: string, redirectUri?: string): string {
+  // Use provided redirectUri or fall back to apiConfig
+  const uri = redirectUri || apiConfig.redirectUri
+  
   // Return empty string if the url is not the defined redirect uri
-  if (!url.startsWith(apiConfig.redirectUri)) {
+  if (!url.startsWith(uri)) {
     return ''
   }
 

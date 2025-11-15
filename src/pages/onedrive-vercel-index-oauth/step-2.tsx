@@ -6,13 +6,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useTranslation, Trans } from 'next-i18next'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 
-import siteConfig from '../../../config/site.config'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
 import { LoadingIcon } from '../../components/Loading'
-import { extractAuthCodeFromRedirected, generateAuthorisationUrl } from '../../utils/oAuthHandler'
+import { extractAuthCodeFromRedirected } from '../../utils/oAuthHandler'
 
-export default function OAuthStep2() {
+export default function OAuthStep2({ siteConfig, oAuthUrl, apiConfig }: { siteConfig: any, oAuthUrl: string, apiConfig: any }) {
   const router = useRouter()
 
   const [oAuthRedirectedUrl, setOAuthRedirectedUrl] = useState('')
@@ -21,8 +20,6 @@ export default function OAuthStep2() {
 
   const { t } = useTranslation()
 
-  const oAuthUrl = generateAuthorisationUrl()
-
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-white dark:bg-gray-900">
       <Head>
@@ -30,7 +27,7 @@ export default function OAuthStep2() {
       </Head>
 
       <main className="flex w-full flex-1 flex-col bg-gray-50 dark:bg-gray-800">
-        <Navbar />
+        <Navbar siteConfig={siteConfig} />
 
         <div className="mx-auto w-full max-w-5xl p-4">
           <div className="rounded bg-white p-3 dark:bg-gray-900 dark:text-gray-100">
@@ -97,7 +94,7 @@ export default function OAuthStep2() {
               value={oAuthRedirectedUrl}
               onChange={e => {
                 setOAuthRedirectedUrl(e.target.value)
-                setAuthCode(extractAuthCodeFromRedirected(e.target.value))
+                setAuthCode(extractAuthCodeFromRedirected(e.target.value, apiConfig.redirectUri))
               }}
             />
 
@@ -142,9 +139,36 @@ export default function OAuthStep2() {
 }
 
 export async function getServerSideProps({ locale }) {
+  // Import configs on the server side to get runtime environment variable values
+  const siteConfig = require('../../../config/site.config')
+  const apiConfig = require('../../../config/api.config')
+  
+  // Generate OAuth URL on server side with runtime config values
+  const authUrl = apiConfig.authApi.replace('/token', '/authorize')
+  const params = new URLSearchParams()
+  params.append('client_id', apiConfig.clientId)
+  params.append('redirect_uri', apiConfig.redirectUri)
+  params.append('response_type', 'code')
+  params.append('scope', apiConfig.scope)
+  params.append('response_mode', 'query')
+  const oAuthUrl = `${authUrl}?${params.toString()}`
+  
   return {
     props: {
       ...(await serverSideTranslations(locale, ['common'])),
+      // Pass runtime config values to the client
+      siteConfig: {
+        title: siteConfig.title,
+        icon: siteConfig.icon,
+        baseDirectory: siteConfig.baseDirectory,
+        links: siteConfig.links,
+        email: siteConfig.email,
+        protectedRoutes: siteConfig.protectedRoutes,
+      },
+      apiConfig: {
+        redirectUri: apiConfig.redirectUri,
+      },
+      oAuthUrl,
     },
   }
 }

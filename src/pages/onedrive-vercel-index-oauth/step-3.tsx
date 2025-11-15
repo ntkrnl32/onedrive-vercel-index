@@ -6,16 +6,15 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useTranslation, Trans } from 'next-i18next'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 
-import siteConfig from '../../../config/site.config'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
 
 import { getAuthPersonInfo, requestTokenWithAuthCode, sendTokenToServer } from '../../utils/oAuthHandler'
 import { LoadingIcon } from '../../components/Loading'
 
-export default function OAuthStep3({ accessToken, expiryTime, refreshToken, error, description, errorUri }) {
+export default function OAuthStep3({ accessToken, expiryTime, refreshToken, error, description, errorUri, siteConfig }: { accessToken?: string, expiryTime?: string, refreshToken?: string, error?: string, description?: string, errorUri?: string, siteConfig: any }) {
   const router = useRouter()
-  const [expiryTimeLeft, setExpiryTimeLeft] = useState(expiryTime)
+  const [expiryTimeLeft, setExpiryTimeLeft] = useState(expiryTime ? parseInt(expiryTime) : 0)
 
   const { t } = useTranslation()
 
@@ -37,6 +36,16 @@ export default function OAuthStep3({ accessToken, expiryTime, refreshToken, erro
   const [buttonError, setButtonError] = useState(false)
 
   const sendAuthTokensToServer = async () => {
+    if (!accessToken || !refreshToken || !expiryTime) {
+      setButtonError(true)
+      setButtonContent(
+        <div>
+          <span>{t('Missing tokens')}</span> <FontAwesomeIcon icon="exclamation-circle" />
+        </div>
+      )
+      return
+    }
+
     setButtonError(false)
     setButtonContent(
       <div>
@@ -94,7 +103,7 @@ export default function OAuthStep3({ accessToken, expiryTime, refreshToken, erro
       </Head>
 
       <main className="flex w-full flex-1 flex-col bg-gray-50 dark:bg-gray-800">
-        <Navbar />
+        <Navbar siteConfig={siteConfig} />
 
         <div className="mx-auto w-full max-w-5xl p-4">
           <div className="rounded bg-white p-3 dark:bg-gray-900 dark:text-gray-100">
@@ -126,7 +135,7 @@ export default function OAuthStep3({ accessToken, expiryTime, refreshToken, erro
                 <p className="my-2 whitespace-pre-line rounded border border-gray-400/20 bg-gray-50 p-2 font-mono text-sm opacity-80 dark:bg-gray-800">
                   {
                     // t('Where is the auth code? Did you follow step 2 you silly donut?')
-                    t(description)
+                    t(description || 'Unknown error')
                   }
                 </p>
                 {errorUri && (
@@ -226,6 +235,9 @@ export default function OAuthStep3({ accessToken, expiryTime, refreshToken, erro
 export async function getServerSideProps({ query, locale }) {
   const { authCode } = query
 
+  // Import siteConfig on the server side to get runtime environment variable values
+  const siteConfig = require('../../../config/site.config')
+  
   // Return if no auth code is present
   if (!authCode) {
     return {
@@ -233,6 +245,15 @@ export async function getServerSideProps({ query, locale }) {
         error: 'No auth code present',
         description: 'Where is the auth code? Did you follow step 2 you silly donut?',
         ...(await serverSideTranslations(locale, ['common'])),
+        siteConfig: {
+          title: siteConfig.title,
+          icon: siteConfig.icon,
+          baseDirectory: siteConfig.baseDirectory,
+          links: siteConfig.links,
+          email: siteConfig.email,
+          protectedRoutes: siteConfig.protectedRoutes,
+          userPrincipalName: siteConfig.userPrincipalName,
+        },
       },
     }
   }
@@ -247,6 +268,15 @@ export async function getServerSideProps({ query, locale }) {
         description: response.errorDescription,
         errorUri: response.errorUri,
         ...(await serverSideTranslations(locale, ['common'])),
+        siteConfig: {
+          title: siteConfig.title,
+          icon: siteConfig.icon,
+          baseDirectory: siteConfig.baseDirectory,
+          links: siteConfig.links,
+          email: siteConfig.email,
+          protectedRoutes: siteConfig.protectedRoutes,
+          userPrincipalName: siteConfig.userPrincipalName,
+        },
       },
     }
   }
@@ -260,6 +290,15 @@ export async function getServerSideProps({ query, locale }) {
       accessToken,
       refreshToken,
       ...(await serverSideTranslations(locale, ['common'])),
+      siteConfig: {
+        title: siteConfig.title,
+        icon: siteConfig.icon,
+        baseDirectory: siteConfig.baseDirectory,
+        links: siteConfig.links,
+        email: siteConfig.email,
+        protectedRoutes: siteConfig.protectedRoutes,
+        userPrincipalName: siteConfig.userPrincipalName,
+      },
     },
   }
 }

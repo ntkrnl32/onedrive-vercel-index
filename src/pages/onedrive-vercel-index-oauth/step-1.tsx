@@ -5,12 +5,11 @@ import { useTranslation, Trans } from 'next-i18next'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 
 import siteConfig from '../../../config/site.config'
-import apiConfig from '../../../config/api.config'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
-export default function OAuthStep1() {
+export default function OAuthStep1({ apiConfig }: { apiConfig: any }) {
   const router = useRouter()
 
   const { t } = useTranslation()
@@ -22,7 +21,7 @@ export default function OAuthStep1() {
       </Head>
 
       <main className="flex w-full flex-1 flex-col bg-gray-50 dark:bg-gray-800">
-        <Navbar />
+        <Navbar siteConfig={siteConfig} />
 
         <div className="mx-auto w-full max-w-5xl p-4">
           <div className="rounded bg-white p-3 dark:bg-gray-900 dark:text-gray-100">
@@ -148,9 +147,30 @@ export default function OAuthStep1() {
 }
 
 export async function getServerSideProps({ locale }) {
+  // Import configs on the server side to get runtime environment variable values
+  const apiConfig = require('../../../config/api.config')
+  const siteConfig = require('../../../config/site.config')
+  
   return {
     props: {
       ...(await serverSideTranslations(locale, ['common'])),
+      // Pass runtime config values to the client
+      apiConfig: {
+        clientId: apiConfig.clientId,
+        clientSecret: apiConfig.clientSecret,
+        redirectUri: apiConfig.redirectUri,
+        authApi: apiConfig.authApi,
+        driveApi: apiConfig.driveApi,
+        scope: apiConfig.scope,
+      },
+      siteConfig: {
+        title: siteConfig.title,
+        icon: siteConfig.icon,
+        baseDirectory: siteConfig.baseDirectory,
+        links: siteConfig.links,
+        email: siteConfig.email,
+        protectedRoutes: siteConfig.protectedRoutes,
+      },
     },
   }
 }
