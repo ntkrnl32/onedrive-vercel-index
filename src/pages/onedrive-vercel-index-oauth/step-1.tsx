@@ -78,10 +78,10 @@ export default function OAuthStep1() {
                   </tr>
                   <tr className="border-y bg-white dark:border-gray-700 dark:bg-gray-900">
                     <td className="bg-gray-50 py-1 px-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700 dark:bg-gray-800 dark:text-gray-400">
-                      CLIENT_SECRET*
+                      CLIENT_SECRET
                     </td>
                     <td className="whitespace-nowrap py-1 px-3 text-gray-500 dark:text-gray-400">
-                      <code className="font-mono text-sm">{apiConfig.obfuscatedClientSecret}</code>
+                      <code className="font-mono text-sm">{apiConfig.clientSecret || '(empty)'}</code>
                     </td>
                   </tr>
                   <tr className="border-y bg-white dark:border-gray-700 dark:bg-gray-900">

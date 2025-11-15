@@ -55,8 +55,7 @@ export async function requestTokenWithAuthCode(
   | { expiryTime: string; accessToken: string; refreshToken: string }
   | { error: string; errorDescription: string; errorUri: string }
 > {
-  const { clientId, redirectUri, authApi } = apiConfig
-  const clientSecret = revealObfuscatedToken(apiConfig.obfuscatedClientSecret)
+  const { clientId, redirectUri, authApi, clientSecret } = apiConfig
 
   // Construct URL parameters for OAuth2
   const params = new URLSearchParams()
@@ -98,9 +97,9 @@ export async function sendTokenToServer(accessToken: string, refreshToken: strin
   return await axios.post(
     '/api',
     {
-      obfuscatedAccessToken: obfuscateToken(accessToken),
+      accessToken: accessToken,
       accessTokenExpiry: parseInt(expiryTime),
-      obfuscatedRefreshToken: obfuscateToken(refreshToken),
+      refreshToken: refreshToken,
     },
     {
       headers: {
