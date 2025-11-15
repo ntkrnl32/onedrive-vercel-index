@@ -88,3 +88,39 @@ module.exports = {
   // without timezone and replacing T with space.
   datetimeFormat: process.env.DATETIME_FORMAT || 'YYYY-MM-DD HH:mm:ss',
 }
+
+// Debug mode: Output configuration details during build
+if (process.env.DEBUG_CONFIG === 'true') {
+  console.log('\n=== Site Configuration Debug Info ===')
+  console.log('Environment Variables:')
+  console.log('  NEXT_PUBLIC_USER_PRINCIPLE_NAME:', process.env.NEXT_PUBLIC_USER_PRINCIPLE_NAME ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  ICON:', process.env.ICON ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  KV_PREFIX:', process.env.KV_PREFIX ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  SITE_TITLE:', process.env.SITE_TITLE ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  BASE_DIRECTORY:', process.env.BASE_DIRECTORY ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  MAX_ITEMS:', process.env.MAX_ITEMS ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  GOOGLE_FONT_SANS:', process.env.GOOGLE_FONT_SANS ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  GOOGLE_FONT_MONO:', process.env.GOOGLE_FONT_MONO ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  GOOGLE_FONT_LINKS:', process.env.GOOGLE_FONT_LINKS ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  FOOTER:', process.env.FOOTER ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  PROTECTED_ROUTES:', process.env.PROTECTED_ROUTES ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  EMAIL:', process.env.EMAIL ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  LINKS:', process.env.LINKS ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  DATETIME_FORMAT:', process.env.DATETIME_FORMAT ? '✓ Set' : '✗ Not set (using default)')
+  console.log('\nFinal Configuration Values:')
+  console.log('  userPrincipalName:', module.exports.userPrincipalName)
+  console.log('  icon:', module.exports.icon)
+  console.log('  kvPrefix:', module.exports.kvPrefix || '(empty)')
+  console.log('  title:', module.exports.title)
+  console.log('  baseDirectory:', module.exports.baseDirectory)
+  console.log('  maxItems:', module.exports.maxItems)
+  console.log('  googleFontSans:', module.exports.googleFontSans)
+  console.log('  googleFontMono:', module.exports.googleFontMono)
+  console.log('  googleFontLinks:', JSON.stringify(module.exports.googleFontLinks))
+  console.log('  footer:', module.exports.footer.substring(0, 50) + '...')
+  console.log('  protectedRoutes:', JSON.stringify(module.exports.protectedRoutes))
+  console.log('  email:', module.exports.email)
+  console.log('  links:', JSON.stringify(module.exports.links))
+  console.log('  datetimeFormat:', module.exports.datetimeFormat)
+  console.log('=== End Site Configuration ===\n')
+}

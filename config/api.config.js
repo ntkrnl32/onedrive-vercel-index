@@ -33,3 +33,25 @@ module.exports = {
   // https://vercel.com/docs/concepts/edge-network/caching
   cacheControlHeader: process.env.CACHE_CONTROL_HEADER || 'max-age=0, s-maxage=60, stale-while-revalidate',
 }
+
+// Debug mode: Output configuration details during build
+if (process.env.DEBUG_CONFIG === 'true') {
+  console.log('\n=== API Configuration Debug Info ===')
+  console.log('Environment Variables:')
+  console.log('  CLIENT_ID:', process.env.CLIENT_ID ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  CLIENT_SECRET:', process.env.CLIENT_SECRET ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  REDIRECT_URI:', process.env.REDIRECT_URI ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  AUTH_API:', process.env.AUTH_API ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  DRIVE_API:', process.env.DRIVE_API ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  SCOPE:', process.env.SCOPE ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  CACHE_CONTROL_HEADER:', process.env.CACHE_CONTROL_HEADER ? '✓ Set' : '✗ Not set (using default)')
+  console.log('\nFinal Configuration Values:')
+  console.log('  clientId:', module.exports.clientId)
+  console.log('  clientSecret:', module.exports.clientSecret ? `${module.exports.clientSecret.substring(0, 5)}...` : '(empty)')
+  console.log('  redirectUri:', module.exports.redirectUri)
+  console.log('  authApi:', module.exports.authApi)
+  console.log('  driveApi:', module.exports.driveApi)
+  console.log('  scope:', module.exports.scope)
+  console.log('  cacheControlHeader:', module.exports.cacheControlHeader)
+  console.log('=== End API Configuration ===\n')
+}
