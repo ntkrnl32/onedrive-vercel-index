@@ -16,6 +16,10 @@ module.exports = {
   // e.g. https://example.com/my-icon.png
   icon: process.env.ICON || '/icons/128.png',
 
+  // [OPTIONAL] Favicon for the site. Can be a path under /public or an absolute URL.
+  // Default uses the conventional /favicon.ico already present in /public.
+  favicon: process.env.FAVICON || '/favicon.ico',
+
   // Prefix for KV Storage
   kvPrefix: process.env.KV_PREFIX || '',
 
@@ -95,6 +99,7 @@ if (process.env.DEBUG_CONFIG === 'true') {
   console.log('Environment Variables:')
   console.log('  NEXT_PUBLIC_USER_PRINCIPLE_NAME:', process.env.NEXT_PUBLIC_USER_PRINCIPLE_NAME ? '✓ Set' : '✗ Not set (using default)')
   console.log('  ICON:', process.env.ICON ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  FAVICON:', process.env.FAVICON ? '✓ Set' : '✗ Not set (using default)')
   console.log('  KV_PREFIX:', process.env.KV_PREFIX ? '✓ Set' : '✗ Not set (using default)')
   console.log('  SITE_TITLE:', process.env.SITE_TITLE ? '✓ Set' : '✗ Not set (using default)')
   console.log('  BASE_DIRECTORY:', process.env.BASE_DIRECTORY ? '✓ Set' : '✗ Not set (using default)')
@@ -110,6 +115,7 @@ if (process.env.DEBUG_CONFIG === 'true') {
   console.log('\nFinal Configuration Values:')
   console.log('  userPrincipalName:', module.exports.userPrincipalName)
   console.log('  icon:', module.exports.icon)
+  console.log('  favicon:', module.exports.favicon)
   console.log('  kvPrefix:', module.exports.kvPrefix || '(empty)')
   console.log('  title:', module.exports.title)
   console.log('  baseDirectory:', module.exports.baseDirectory)
