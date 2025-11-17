@@ -5,7 +5,7 @@ import { posix as pathPosix } from 'path'
 import axios from 'axios'
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-import { checkAuthRoute, encodePath, getAccessToken } from '.'
+import { checkAuthRoute, checkFileProtection, encodePath, getAccessToken } from '.'
 import apiConfig from '../../../config/api.config'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -48,6 +48,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // If message is empty, then the path is not protected.
   // Conversely, protected routes are not allowed to serve from cache.
   if (message !== '') {
+    res.setHeader('Cache-Control', 'no-cache')
+  }
+
+  // Check file-level protection
+  const fileName = cleanPath.split('/').pop() || ''
+  const folderPath = cleanPath.substring(0, cleanPath.lastIndexOf('/')) || '/'
+  const fileProtection = await checkFileProtection(fileName, folderPath, accessToken, odpt as string)
+  if (fileProtection.code !== 200) {
+    if (fileProtection.code === 404) {
+      // Password file missing, allow access (public file)
+    } else {
+      res.status(fileProtection.code).json({ error: fileProtection.message })
+      return
+    }
+  }
+  if (fileProtection.message !== '') {
     res.setHeader('Cache-Control', 'no-cache')
   }
 

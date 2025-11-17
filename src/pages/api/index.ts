@@ -98,6 +98,130 @@ export function getAuthTokenPath(path: string) {
 }
 
 /**
+ * Check if a file is protected by extension or regex pattern
+ * @param fileName Name of the file to check
+ * @returns true if file is protected, false otherwise
+ */
+export function isFileProtected(fileName: string): boolean {
+  // Folders are never protected by file-level rules
+  const protectedExtensions = (siteConfig.protectedFileExtensions || []) as string[]
+  const protectedRegex = siteConfig.protectedFileRegex as string
+
+  // Check by extension
+  if (protectedExtensions.length > 0) {
+    const ext = fileName.split('.').pop()?.toLowerCase()
+    if (ext && protectedExtensions.map(e => e.toLowerCase()).includes(ext)) {
+      return true
+    }
+  }
+
+  // Check by regex
+  if (protectedRegex) {
+    try {
+      const regex = new RegExp(protectedRegex, 'i')
+      if (regex.test(fileName)) {
+        return true
+      }
+    } catch (e) {
+      console.error('Invalid protectedFileRegex pattern:', protectedRegex, e)
+    }
+  }
+
+  return false
+}
+
+/**
+ * Check authentication for file-level protected files
+ * @param fileName Name of the file
+ * @param folderPath Path to the folder containing the file
+ * @param accessToken OneDrive API access token
+ * @param odTokenHeader Authentication token from request header
+ * @returns Authentication result
+ */
+export async function checkFileProtection(
+  fileName: string,
+  folderPath: string,
+  accessToken: string,
+  odTokenHeader: string
+): Promise<{ code: 200 | 401 | 404 | 500; message: string; passwordFile?: string }> {
+  if (!isFileProtected(fileName)) {
+    return { code: 200, message: '' }
+  }
+
+  // Determine which password file to check
+  const ext = fileName.split('.').pop()?.toLowerCase()
+  const protectedExtensions = (siteConfig.protectedFileExtensions || []) as string[]
+  const isProtectedByExt = ext && protectedExtensions.map(e => e.toLowerCase()).includes(ext)
+
+  const passwordFileName = isProtectedByExt ? `.password.${ext}` : '.password.regex'
+  const passwordFilePath = `${folderPath}/${passwordFileName}`
+
+  try {
+    const token = await axios.get(`${apiConfig.driveApi}/root${encodePath(passwordFilePath)}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      params: {
+        select: '@microsoft.graph.downloadUrl,file',
+      },
+    })
+
+    const odProtectedToken = await axios.get(token.data['@microsoft.graph.downloadUrl'])
+
+    if (
+      !compareHashedToken({
+        odTokenHeader: odTokenHeader,
+        dotPassword: odProtectedToken.data.toString(),
+      })
+    ) {
+      return { code: 401, message: 'Password required.', passwordFile: passwordFileName }
+    }
+  } catch (error: any) {
+    if (error?.response?.status === 404) {
+      return { code: 404, message: `Password file ${passwordFileName} not found.`, passwordFile: passwordFileName }
+    } else {
+      return { code: 500, message: 'Internal server error.' }
+    }
+  }
+
+  return { code: 200, message: 'Authenticated.' }
+}
+
+/**
+ * Filter folder items: hide protected files if not authenticated
+ * @param items Array of files/folders from OneDrive API
+ * @param folderPath Current folder path
+ * @param accessToken OneDrive API access token
+ * @param odTokenHeader Authentication token from request header
+ * @returns Filtered array with unauthenticated protected files removed
+ */
+async function filterProtectedFiles(
+  items: any[],
+  folderPath: string,
+  accessToken: string,
+  odTokenHeader: string
+): Promise<any[]> {
+  const filtered: any[] = []
+
+  for (const item of items) {
+    // Always show folders and .password* files (but they're hidden by name filter)
+    if (item.folder || item.name.startsWith('.password')) {
+      filtered.push(item)
+      continue
+    }
+
+    // Check if file is protected
+    const { code } = await checkFileProtection(item.name, folderPath, accessToken, odTokenHeader)
+    
+    // Only show file if authenticated (code 200) or password file missing (404 - show as public)
+    // Hide if authentication required but not provided (401)
+    if (code === 200 || code === 404) {
+      filtered.push(item)
+    }
+  }
+
+  return filtered
+}
+
+/**
  * Handles protected route authentication:
  * - Match the cleanPath against an array of user defined protected routes
  * - If a match is found:
@@ -266,6 +390,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           ...(sort ? { $orderby: sort } : {}),
         },
       })
+
+      // Filter out protected files based on authentication
+      folderData.value = await filterProtectedFiles(
+        folderData.value,
+        cleanPath,
+        accessToken,
+        req.headers['od-protected-token'] as string
+      )
 
       // Extract next page token from full @odata.nextLink
       const nextPage = folderData['@odata.nextLink']

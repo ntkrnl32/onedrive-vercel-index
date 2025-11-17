@@ -1,7 +1,7 @@
 import axios from 'axios'
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-import { encodePath, getAccessToken } from '.'
+import { encodePath, getAccessToken, isFileProtected } from '.'
 import apiConfig from '../../../config/api.config'
 import siteConfig from '../../../config/site.config'
 
@@ -51,7 +51,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           top: siteConfig.maxItems,
         },
       })
-      res.status(200).json(data.value)
+      
+      // Filter out protected files from search results
+      // Note: Search doesn't pass auth tokens, so we hide all protected files
+      const filteredResults = data.value.filter((item: any) => {
+        // Always show folders
+        if (item.folder) return true
+        // Hide protected files
+        return !isFileProtected(item.name)
+      })
+      
+      res.status(200).json(filteredResults)
     } catch (error: any) {
       res.status(error?.response?.status ?? 500).json({ error: error?.response?.data ?? 'Internal server error.' })
     }

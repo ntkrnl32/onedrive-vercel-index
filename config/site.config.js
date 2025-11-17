@@ -33,6 +33,23 @@ module.exports = {
   // Do note that this is limited up to 200 items by the upstream OneDrive API.
   maxItems: parseInt(process.env.MAX_ITEMS) || 100,
 
+  // [OPTIONAL] Protected file extensions - files with these extensions require authentication via .password file.
+  // Place a .password.<ext> file in the same directory with the password hash to protect files with that extension.
+  // Provide an array of extensions (without the dot), e.g., ['tmp', 'sensitive', 'private']
+  protectedFileExtensions: (() => {
+    try {
+      return process.env.PROTECTED_FILE_EXTENSIONS ? JSON.parse(process.env.PROTECTED_FILE_EXTENSIONS) : []
+    } catch {
+      return []
+    }
+  })(),
+
+  // [OPTIONAL] Protected file regex pattern - files matching this regex require authentication via .password.regex file.
+  // Place a .password.regex file in the same directory with the password hash to protect matching files.
+  // Provide a regex pattern as a string, e.g., '^\\..*' to protect all dotfiles, or '.*\\.tmp$|.*\\.bak$' for multiple patterns.
+  // Leave empty string to disable regex filtering.
+  protectedFileRegex: process.env.PROTECTED_FILE_REGEX || '',
+
   // [OPTIONAL] We use Google Fonts natively for font customisations.
   // You can check and generate the required links and names at https://fonts.google.com.
   // googleFontSans - the sans serif font used in onedrive-vercel-index.
@@ -104,6 +121,8 @@ if (process.env.DEBUG_CONFIG === 'true') {
   console.log('  SITE_TITLE:', process.env.SITE_TITLE ? '✓ Set' : '✗ Not set (using default)')
   console.log('  BASE_DIRECTORY:', process.env.BASE_DIRECTORY ? '✓ Set' : '✗ Not set (using default)')
   console.log('  MAX_ITEMS:', process.env.MAX_ITEMS ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  PROTECTED_FILE_EXTENSIONS:', process.env.PROTECTED_FILE_EXTENSIONS ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  PROTECTED_FILE_REGEX:', process.env.PROTECTED_FILE_REGEX ? '✓ Set' : '✗ Not set (using default)')
   console.log('  GOOGLE_FONT_SANS:', process.env.GOOGLE_FONT_SANS ? '✓ Set' : '✗ Not set (using default)')
   console.log('  GOOGLE_FONT_MONO:', process.env.GOOGLE_FONT_MONO ? '✓ Set' : '✗ Not set (using default)')
   console.log('  GOOGLE_FONT_LINKS:', process.env.GOOGLE_FONT_LINKS ? '✓ Set' : '✗ Not set (using default)')
@@ -120,6 +139,8 @@ if (process.env.DEBUG_CONFIG === 'true') {
   console.log('  title:', module.exports.title)
   console.log('  baseDirectory:', module.exports.baseDirectory)
   console.log('  maxItems:', module.exports.maxItems)
+  console.log('  protectedFileExtensions:', JSON.stringify(module.exports.protectedFileExtensions))
+  console.log('  protectedFileRegex:', module.exports.protectedFileRegex || '(empty)')
   console.log('  googleFontSans:', module.exports.googleFontSans)
   console.log('  googleFontMono:', module.exports.googleFontMono)
   console.log('  googleFontLinks:', JSON.stringify(module.exports.googleFontLinks))

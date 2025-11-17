@@ -57,6 +57,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.setHeader('Cache-Control', 'no-cache')
   }
 
+  // Check file-level protection
+  const { checkFileProtection } = await import('.')
+  const fileName = cleanPath.split('/').pop() || ''
+  const folderPath = cleanPath.substring(0, cleanPath.lastIndexOf('/')) || '/'
+  const fileProtection = await checkFileProtection(fileName, folderPath, accessToken, odTokenHeader)
+  if (fileProtection.code !== 200) {
+    if (fileProtection.code === 404) {
+      // Password file missing, allow access (public file)
+    } else {
+      res.status(fileProtection.code).json({ error: fileProtection.message })
+      return
+    }
+  }
+  if (fileProtection.message !== '') {
+    res.setHeader('Cache-Control', 'no-cache')
+  }
+
   await runCorsMiddleware(req, res)
   try {
     // Handle response from OneDrive API
