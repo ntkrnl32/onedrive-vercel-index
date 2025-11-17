@@ -113,7 +113,7 @@ Documentation is hosted at [ovi.swo.moe](https://ovi.swo.moe/).
 - [I deployed this before, how can I upgrade to the latest version?](https://ovi.swo.moe/docs/migration/updating-to-latest-version)
 - [I was here before 2022, how can I migrate to the new version?](https://ovi.swo.moe/docs/migration/if-you-deployed-before-2022)
 - [I got a problem during deployment ...](https://ovi.swo.moe/docs/faqs/error-on-deployment)
-- I didn't find a solution / My problem is unique? [Find help in discussion forum](https://github.com/spencerwooo/onedrive-vercel-index/discussions).
+- I didn't find a solution / My problem is unique? [Find help in discussion forum](https://github.com/ntkrnl32/onedrive-vercel-index/discussions).
 
 ## Server-*less* (free)?
 
