@@ -6,6 +6,7 @@ import toast, { Toaster } from 'react-hot-toast'
 import emojiRegex from 'emoji-regex'
 
 import dynamic from 'next/dynamic'
+import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { useTranslation } from 'next-i18next'
 
@@ -199,6 +200,29 @@ const FileListing: FC<{ query?: ParsedUrlQuery }> = ({ query }) => {
 
     // Find README.md file to render
     const readmeFile = folderChildren.find(c => c.name.toLowerCase() === 'readme.md')
+
+    // Empty folder state
+    if (folderChildren.length === 0) {
+      return (
+        <>
+          <Toaster />
+          <div className="my-12">
+            <div className="mx-auto w-1/3">
+              <Image
+                src="/images/fabulous-come-back-later.png"
+                alt="Empty folder"
+                width={912}
+                height={912}
+                priority
+              />
+            </div>
+            <div className="mx-auto mt-6 max-w-xl text-center text-gray-500">
+              <div className="text-xl font-bold">{t('Nothing here.')}</div>
+            </div>
+          </div>
+        </>
+      )
+    }
 
     // Filtered file list helper
     const getFiles = () => folderChildren.filter(c => !c.folder && c.name !== '.password')
