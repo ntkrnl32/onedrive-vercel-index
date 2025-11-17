@@ -67,7 +67,11 @@ const Navbar = ({ siteConfig }: { siteConfig?: any }) => {
 
       <div className="mx-auto flex w-full items-center justify-between space-x-4 px-4 py-1">
         <Link href="/" passHref className="flex items-center space-x-2 py-2 hover:opacity-80 dark:text-white md:p-2">
-          <Image src={config.icon} alt="icon" width="25" height="25" priority />
+          {/^https?:\/\//.test(config.icon) ? (
+            <img src={config.icon} alt="icon" width={25} height={25} />
+          ) : (
+            <Image src={config.icon} alt="icon" width={25} height={25} priority unoptimized />
+          )}
           <span className="hidden font-bold sm:block">{config.title}</span>
         </Link>
 
