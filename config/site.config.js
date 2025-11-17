@@ -33,9 +33,39 @@ module.exports = {
   // Do note that this is limited up to 200 items by the upstream OneDrive API.
   maxItems: parseInt(process.env.MAX_ITEMS) || 100,
 
-  // [OPTIONAL] Protected file extensions - files with these extensions require authentication via .password file.
-  // Place a .password.<ext> file in the same directory with the password hash to protect files with that extension.
-  // Provide an array of extensions (without the dot), e.g., ['tmp', 'sensitive', 'private']
+  // [OPTIONAL] Hidden file extensions - files with these extensions are hidden from UI but still accessible via API/download.
+  // Useful for keeping UI clean while allowing folder downloads to include these files.
+  // Provide an array of extensions (without the dot), e.g., ['tmp', 'log', 'cache']
+  hiddenFileExtensions: (() => {
+    try {
+      return process.env.HIDDEN_FILE_EXTENSIONS ? JSON.parse(process.env.HIDDEN_FILE_EXTENSIONS) : []
+    } catch {
+      return []
+    }
+  })(),
+
+  // [OPTIONAL] Hidden file regex pattern - files matching this regex are hidden from UI but still accessible.
+  // Provide a regex pattern as a string, e.g., '^\\..*' to hide dotfiles, or '.*\\.tmp$|.*\\.bak$' for multiple patterns.
+  hiddenFileRegex: process.env.HIDDEN_FILE_REGEX || '',
+
+  // [OPTIONAL] Fully hidden file extensions - files completely blocked at API level, cannot be accessed at all.
+  // These files won't appear in listings AND cannot be downloaded individually or in folder downloads.
+  // Provide an array of extensions (without the dot), e.g., ['secret', 'confidential']
+  fullyHiddenFileExtensions: (() => {
+    try {
+      return process.env.FULLY_HIDDEN_FILE_EXTENSIONS ? JSON.parse(process.env.FULLY_HIDDEN_FILE_EXTENSIONS) : []
+    } catch {
+      return []
+    }
+  })(),
+
+  // [OPTIONAL] Fully hidden file regex pattern - files matching this are completely blocked at API level.
+  // Provide a regex pattern as a string.
+  fullyHiddenFileRegex: process.env.FULLY_HIDDEN_FILE_REGEX || '',
+
+  // [OPTIONAL] Password-protected file extensions - require authentication via .password.<ext> file.
+  // These are automatically fully hidden AND require password. Place a .password.<ext> file in the same directory.
+  // Provide an array of extensions (without the dot), e.g., ['private', 'sensitive']
   protectedFileExtensions: (() => {
     try {
       return process.env.PROTECTED_FILE_EXTENSIONS ? JSON.parse(process.env.PROTECTED_FILE_EXTENSIONS) : []
@@ -44,11 +74,14 @@ module.exports = {
     }
   })(),
 
-  // [OPTIONAL] Protected file regex pattern - files matching this regex require authentication via .password.regex file.
-  // Place a .password.regex file in the same directory with the password hash to protect matching files.
-  // Provide a regex pattern as a string, e.g., '^\\..*' to protect all dotfiles, or '.*\\.tmp$|.*\\.bak$' for multiple patterns.
-  // Leave empty string to disable regex filtering.
+  // [OPTIONAL] Password-protected file regex pattern - require authentication via .password.regex file.
+  // These are automatically fully hidden AND require password. Place a .password.regex file in the same directory.
   protectedFileRegex: process.env.PROTECTED_FILE_REGEX || '',
+
+  // [OPTIONAL] Hide protected files from listings if not authenticated.
+  // If true: protected files are fully hidden (not in listings, blocked at API) until password provided.
+  // If false: protected files shown in listings, but require password when clicked/accessed.
+  hideProtectedFiles: process.env.HIDE_PROTECTED_FILES === 'true' || false,
 
   // [OPTIONAL] We use Google Fonts natively for font customisations.
   // You can check and generate the required links and names at https://fonts.google.com.
@@ -121,8 +154,13 @@ if (process.env.DEBUG_CONFIG === 'true') {
   console.log('  SITE_TITLE:', process.env.SITE_TITLE ? '✓ Set' : '✗ Not set (using default)')
   console.log('  BASE_DIRECTORY:', process.env.BASE_DIRECTORY ? '✓ Set' : '✗ Not set (using default)')
   console.log('  MAX_ITEMS:', process.env.MAX_ITEMS ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  HIDDEN_FILE_EXTENSIONS:', process.env.HIDDEN_FILE_EXTENSIONS ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  HIDDEN_FILE_REGEX:', process.env.HIDDEN_FILE_REGEX ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  FULLY_HIDDEN_FILE_EXTENSIONS:', process.env.FULLY_HIDDEN_FILE_EXTENSIONS ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  FULLY_HIDDEN_FILE_REGEX:', process.env.FULLY_HIDDEN_FILE_REGEX ? '✓ Set' : '✗ Not set (using default)')
   console.log('  PROTECTED_FILE_EXTENSIONS:', process.env.PROTECTED_FILE_EXTENSIONS ? '✓ Set' : '✗ Not set (using default)')
   console.log('  PROTECTED_FILE_REGEX:', process.env.PROTECTED_FILE_REGEX ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  HIDE_PROTECTED_FILES:', process.env.HIDE_PROTECTED_FILES ? '✓ Set' : '✗ Not set (using default)')
   console.log('  GOOGLE_FONT_SANS:', process.env.GOOGLE_FONT_SANS ? '✓ Set' : '✗ Not set (using default)')
   console.log('  GOOGLE_FONT_MONO:', process.env.GOOGLE_FONT_MONO ? '✓ Set' : '✗ Not set (using default)')
   console.log('  GOOGLE_FONT_LINKS:', process.env.GOOGLE_FONT_LINKS ? '✓ Set' : '✗ Not set (using default)')
@@ -139,8 +177,13 @@ if (process.env.DEBUG_CONFIG === 'true') {
   console.log('  title:', module.exports.title)
   console.log('  baseDirectory:', module.exports.baseDirectory)
   console.log('  maxItems:', module.exports.maxItems)
+  console.log('  hiddenFileExtensions:', JSON.stringify(module.exports.hiddenFileExtensions))
+  console.log('  hiddenFileRegex:', module.exports.hiddenFileRegex || '(empty)')
+  console.log('  fullyHiddenFileExtensions:', JSON.stringify(module.exports.fullyHiddenFileExtensions))
+  console.log('  fullyHiddenFileRegex:', module.exports.fullyHiddenFileRegex || '(empty)')
   console.log('  protectedFileExtensions:', JSON.stringify(module.exports.protectedFileExtensions))
   console.log('  protectedFileRegex:', module.exports.protectedFileRegex || '(empty)')
+  console.log('  hideProtectedFiles:', module.exports.hideProtectedFiles)
   console.log('  googleFontSans:', module.exports.googleFontSans)
   console.log('  googleFontMono:', module.exports.googleFontMono)
   console.log('  googleFontLinks:', JSON.stringify(module.exports.googleFontLinks))

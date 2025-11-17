@@ -98,7 +98,71 @@ export function getAuthTokenPath(path: string) {
 }
 
 /**
- * Check if a file is protected by extension or regex pattern
+ * Check if a file is hidden (UI-only, still accessible via API)
+ * @param fileName Name of the file to check
+ * @returns true if file should be hidden from UI, false otherwise
+ */
+export function isFileHidden(fileName: string): boolean {
+  const hiddenExtensions = (siteConfig.hiddenFileExtensions || []) as string[]
+  const hiddenRegex = siteConfig.hiddenFileRegex as string
+
+  // Check by extension
+  if (hiddenExtensions.length > 0) {
+    const ext = fileName.split('.').pop()?.toLowerCase()
+    if (ext && hiddenExtensions.map(e => e.toLowerCase()).includes(ext)) {
+      return true
+    }
+  }
+
+  // Check by regex
+  if (hiddenRegex) {
+    try {
+      const regex = new RegExp(hiddenRegex, 'i')
+      if (regex.test(fileName)) {
+        return true
+      }
+    } catch (e) {
+      console.error('Invalid hiddenFileRegex pattern:', hiddenRegex, e)
+    }
+  }
+
+  return false
+}
+
+/**
+ * Check if a file is fully hidden (blocked at API level)
+ * @param fileName Name of the file to check
+ * @returns true if file should be completely blocked, false otherwise
+ */
+export function isFileFullyHidden(fileName: string): boolean {
+  const fullyHiddenExtensions = (siteConfig.fullyHiddenFileExtensions || []) as string[]
+  const fullyHiddenRegex = siteConfig.fullyHiddenFileRegex as string
+
+  // Check by extension
+  if (fullyHiddenExtensions.length > 0) {
+    const ext = fileName.split('.').pop()?.toLowerCase()
+    if (ext && fullyHiddenExtensions.map(e => e.toLowerCase()).includes(ext)) {
+      return true
+    }
+  }
+
+  // Check by regex
+  if (fullyHiddenRegex) {
+    try {
+      const regex = new RegExp(fullyHiddenRegex, 'i')
+      if (regex.test(fileName)) {
+        return true
+      }
+    } catch (e) {
+      console.error('Invalid fullyHiddenFileRegex pattern:', fullyHiddenRegex, e)
+    }
+  }
+
+  return false
+}
+
+/**
+ * Check if a file is password-protected by extension or regex pattern
  * @param fileName Name of the file to check
  * @returns true if file is protected, false otherwise
  */
@@ -186,14 +250,14 @@ export async function checkFileProtection(
 }
 
 /**
- * Filter folder items: hide protected files if not authenticated
+ * Filter folder items based on hidden/fullyHidden/protected rules
  * @param items Array of files/folders from OneDrive API
  * @param folderPath Current folder path
  * @param accessToken OneDrive API access token
  * @param odTokenHeader Authentication token from request header
- * @returns Filtered array with unauthenticated protected files removed
+ * @returns Filtered array based on visibility and protection rules
  */
-async function filterProtectedFiles(
+async function filterFiles(
   items: any[],
   folderPath: string,
   accessToken: string,
@@ -202,20 +266,50 @@ async function filterProtectedFiles(
   const filtered: any[] = []
 
   for (const item of items) {
-    // Always show folders and .password* files (but they're hidden by name filter)
-    if (item.folder || item.name.startsWith('.password')) {
+    // Always show folders
+    if (item.folder) {
       filtered.push(item)
       continue
     }
 
-    // Check if file is protected
-    const { code } = await checkFileProtection(item.name, folderPath, accessToken, odTokenHeader)
-    
-    // Only show file if authenticated (code 200) or password file missing (404 - show as public)
-    // Hide if authentication required but not provided (401)
-    if (code === 200 || code === 404) {
-      filtered.push(item)
+    const fileName = item.name
+
+    // Hide .password* files from listings
+    if (fileName.startsWith('.password')) {
+      continue
     }
+
+    // Check fully hidden - completely block at API level
+    if (isFileFullyHidden(fileName)) {
+      continue // Don't include in response at all
+    }
+
+    // Check password-protected
+    if (isFileProtected(fileName)) {
+      const hideProtected = siteConfig.hideProtectedFiles as boolean
+      const { code } = await checkFileProtection(fileName, folderPath, accessToken, odTokenHeader)
+      
+      if (hideProtected) {
+        // Hide mode: fully hidden unless authenticated
+        // Only show if authenticated (200) or password file missing (404 = treat as public)
+        if (code === 200 || code === 404) {
+          filtered.push(item)
+        }
+        // If 401 (auth required), don't include in response (fully hidden)
+      } else {
+        // Show mode: always show in listing, auth checked on access
+        filtered.push(item)
+      }
+      continue
+    }
+
+    // Check UI-hidden - hide from listings but allow in downloads
+    if (isFileHidden(fileName)) {
+      continue // Don't show in UI listings
+    }
+
+    // File is public and visible
+    filtered.push(item)
   }
 
   return filtered
@@ -391,8 +485,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       })
 
-      // Filter out protected files based on authentication
-      folderData.value = await filterProtectedFiles(
+      // Filter files based on hidden/fullyHidden/protected rules
+      folderData.value = await filterFiles(
         folderData.value,
         cleanPath,
         accessToken,

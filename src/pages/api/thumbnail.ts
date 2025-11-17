@@ -5,7 +5,7 @@ import { posix as pathPosix } from 'path'
 import axios from 'axios'
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-import { checkAuthRoute, checkFileProtection, encodePath, getAccessToken } from '.'
+import { checkAuthRoute, checkFileProtection, encodePath, getAccessToken, isFileFullyHidden, isFileProtected } from '.'
 import apiConfig from '../../../config/api.config'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -51,20 +51,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.setHeader('Cache-Control', 'no-cache')
   }
 
-  // Check file-level protection
+  // Check file-level access control
   const fileName = cleanPath.split('/').pop() || ''
   const folderPath = cleanPath.substring(0, cleanPath.lastIndexOf('/')) || '/'
-  const fileProtection = await checkFileProtection(fileName, folderPath, accessToken, odpt as string)
-  if (fileProtection.code !== 200) {
-    if (fileProtection.code === 404) {
-      // Password file missing, allow access (public file)
-    } else {
-      res.status(fileProtection.code).json({ error: fileProtection.message })
-      return
-    }
+  
+  // Block fully hidden files
+  if (isFileFullyHidden(fileName)) {
+    res.status(404).json({ error: 'File not found.' })
+    return
   }
-  if (fileProtection.message !== '') {
-    res.setHeader('Cache-Control', 'no-cache')
+  
+  // Check password-protected files
+  if (isFileProtected(fileName)) {
+    const fileProtection = await checkFileProtection(fileName, folderPath, accessToken, odpt as string)
+    if (fileProtection.code !== 200) {
+      if (fileProtection.code === 404) {
+        // Password file missing, allow access (public file)
+      } else {
+        res.status(fileProtection.code).json({ error: fileProtection.message })
+        return
+      }
+    }
+    if (fileProtection.message !== '') {
+      res.setHeader('Cache-Control', 'no-cache')
+    }
   }
 
   const requestPath = encodePath(cleanPath)

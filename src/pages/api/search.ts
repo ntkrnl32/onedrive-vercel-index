@@ -1,7 +1,7 @@
 import axios from 'axios'
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-import { encodePath, getAccessToken, isFileProtected } from '.'
+import { encodePath, getAccessToken, isFileProtected, isFileFullyHidden } from '.'
 import apiConfig from '../../../config/api.config'
 import siteConfig from '../../../config/site.config'
 
@@ -52,13 +52,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       })
       
-      // Filter out protected files from search results
-      // Note: Search doesn't pass auth tokens, so we hide all protected files
+      // Filter out fully hidden and protected files from search results
+      // Note: Search doesn't pass auth tokens, so we hide protected files
+      // Hidden (UI-only) files are shown in search since they're accessible
       const filteredResults = data.value.filter((item: any) => {
         // Always show folders
         if (item.folder) return true
-        // Hide protected files
-        return !isFileProtected(item.name)
+        const fileName = item.name
+        // Block fully hidden files
+        if (isFileFullyHidden(fileName)) return false
+        // Block password-protected files (no auth in search)
+        if (isFileProtected(fileName)) return false
+        return true
       })
       
       res.status(200).json(filteredResults)
