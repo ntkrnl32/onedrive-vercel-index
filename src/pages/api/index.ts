@@ -502,6 +502,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
       return
     }
+
+    // Handle file identity: enforce fully hidden and protected checks
+    const fileName = identityData?.name as string
+    const folderPath = cleanPath.substring(0, cleanPath.lastIndexOf('/')) || '/'
+
+    // Fully hidden files: return 404 and do not reveal metadata
+    if (isFileFullyHidden(fileName)) {
+      res.status(404).json({ error: 'File not found.' })
+      return
+    }
+
+    // Password-protected files: require authentication before revealing metadata
+    if (isFileProtected(fileName)) {
+      const { code, message } = await checkFileProtection(
+        fileName,
+        folderPath,
+        accessToken,
+        req.headers['od-protected-token'] as string
+      )
+      if (code !== 200) {
+        if (code === 404) {
+          // No password file found -> treat as public
+        } else {
+          res.status(code).json({ error: message })
+          return
+        }
+      }
+      if (message !== '') {
+        res.setHeader('Cache-Control', 'no-cache')
+      }
+    }
+
     res.status(200).json({ file: identityData })
     return
   } catch (error: any) {
