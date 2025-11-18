@@ -102,9 +102,26 @@ export function getAuthTokenPath(path: string) {
  * @param fileName Name of the file to check
  * @returns true if file should be hidden from UI, false otherwise
  */
+// Convert string or /pattern/flags to RegExp. Returns null if invalid.
+function toRegExp(input: unknown, defaultFlags = 'i'): RegExp | null {
+  if (!input) return null
+  if (input instanceof RegExp) return input
+  if (typeof input === 'string') {
+    try {
+      const m = input.match(/^\/(.*)\/([gimsuy]*)$/)
+      if (m) return new RegExp(m[1], m[2] || defaultFlags)
+      return new RegExp(input, defaultFlags)
+    } catch (e) {
+      console.error('Invalid regex string:', input, e)
+      return null
+    }
+  }
+  return null
+}
+
 export function isFileHidden(fileName: string): boolean {
   const hiddenExtensions = (siteConfig.hiddenFileExtensions || []) as string[]
-  const hiddenRegex = siteConfig.hiddenFileRegex as string
+  const hiddenRegex = toRegExp((siteConfig as any).hiddenFileRegex, 'i')
 
   // Check by extension
   if (hiddenExtensions.length > 0) {
@@ -115,15 +132,8 @@ export function isFileHidden(fileName: string): boolean {
   }
 
   // Check by regex
-  if (hiddenRegex) {
-    try {
-      const regex = new RegExp(hiddenRegex, 'i')
-      if (regex.test(fileName)) {
-        return true
-      }
-    } catch (e) {
-      console.error('Invalid hiddenFileRegex pattern:', hiddenRegex, e)
-    }
+  if (hiddenRegex && hiddenRegex.test(fileName)) {
+    return true
   }
 
   return false
@@ -136,7 +146,7 @@ export function isFileHidden(fileName: string): boolean {
  */
 export function isFileFullyHidden(fileName: string): boolean {
   const fullyHiddenExtensions = (siteConfig.fullyHiddenFileExtensions || []) as string[]
-  const fullyHiddenRegex = siteConfig.fullyHiddenFileRegex as string
+  const fullyHiddenRegex = toRegExp((siteConfig as any).fullyHiddenFileRegex, 'i')
 
   // Check by extension
   if (fullyHiddenExtensions.length > 0) {
@@ -147,15 +157,8 @@ export function isFileFullyHidden(fileName: string): boolean {
   }
 
   // Check by regex
-  if (fullyHiddenRegex) {
-    try {
-      const regex = new RegExp(fullyHiddenRegex, 'i')
-      if (regex.test(fileName)) {
-        return true
-      }
-    } catch (e) {
-      console.error('Invalid fullyHiddenFileRegex pattern:', fullyHiddenRegex, e)
-    }
+  if (fullyHiddenRegex && fullyHiddenRegex.test(fileName)) {
+    return true
   }
 
   return false
@@ -169,7 +172,7 @@ export function isFileFullyHidden(fileName: string): boolean {
 export function isFileProtected(fileName: string): boolean {
   // Folders are never protected by file-level rules
   const protectedExtensions = (siteConfig.protectedFileExtensions || []) as string[]
-  const protectedRegex = siteConfig.protectedFileRegex as string
+  const protectedRegex = toRegExp((siteConfig as any).protectedFileRegex, 'i')
 
   // Check by extension
   if (protectedExtensions.length > 0) {
@@ -180,15 +183,8 @@ export function isFileProtected(fileName: string): boolean {
   }
 
   // Check by regex
-  if (protectedRegex) {
-    try {
-      const regex = new RegExp(protectedRegex, 'i')
-      if (regex.test(fileName)) {
-        return true
-      }
-    } catch (e) {
-      console.error('Invalid protectedFileRegex pattern:', protectedRegex, e)
-    }
+  if (protectedRegex && protectedRegex.test(fileName)) {
+    return true
   }
 
   return false
