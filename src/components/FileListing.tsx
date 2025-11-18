@@ -198,8 +198,31 @@ const FileListing: FC<{ query?: ParsedUrlQuery }> = ({ query }) => {
     // Expand list of API returns into flattened file data
     const folderChildren = [].concat(...responses.map(r => r.folder.value)) as OdFolderObject['value']
 
-    // Find README.md file to render
-    const readmeFile = folderChildren.find(c => c.name.toLowerCase() === 'readme.md')
+    // Find README file to render (with language priority based on user's locale)
+    const readmeFile = (() => {
+      // Use i18n current locale (from next-i18next router) if available, otherwise browser/default
+      const userLocale = router.locale || (typeof navigator !== 'undefined' ? navigator.language : 'en-US')
+      const lang = userLocale.toLowerCase()
+      
+      // Generate priority list: zh_CN, zh-CN, zh, readme.md
+      const priorities: string[] = []
+      if (lang.includes('-') || lang.includes('_')) {
+        const [prefix, region] = lang.split(/[-_]/)
+        priorities.push(`readme.${prefix}_${region}.md`)
+        priorities.push(`readme.${prefix}-${region}.md`)
+        priorities.push(`readme.${prefix}.md`)
+      } else {
+        priorities.push(`readme.${lang}.md`)
+      }
+      priorities.push('readme.md') // Fallback (README.md is in defaultReadmeLanguage)
+      
+      // Find first matching README
+      for (const name of priorities) {
+        const found = folderChildren.find(c => c.name.toLowerCase() === name)
+        if (found) return found
+      }
+      return undefined
+    })()
 
     // Empty folder state
     if (folderChildren.length === 0) {

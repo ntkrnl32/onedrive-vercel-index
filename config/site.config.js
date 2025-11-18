@@ -141,6 +141,12 @@ module.exports = {
   // https://day.js.org/docs/en/display/format for detailed specification. The default value is ISO 8601 full datetime
   // without timezone and replacing T with space.
   datetimeFormat: process.env.DATETIME_FORMAT || 'YYYY-MM-DD HH:mm:ss',
+
+  // [OPTIONAL] Language of the README.md file. This tells the system what language README.md is written in.
+  // When looking for README files, the system will try to find a localized version matching the user's current locale,
+  // and fall back to README.md if no match is found. Format: 'en-US', 'zh-CN', 'ja', etc.
+  // Priority: README.<user-locale>.md variants > README.md (which is in this language)
+  defaultReadmeLanguage: process.env.DEFAULT_README_LANGUAGE || 'en-US',
 }
 
 // Debug mode: Output configuration details during build
@@ -169,6 +175,7 @@ if (process.env.DEBUG_CONFIG === 'true') {
   console.log('  EMAIL:', process.env.EMAIL ? '✓ Set' : '✗ Not set (using default)')
   console.log('  LINKS:', process.env.LINKS ? '✓ Set' : '✗ Not set (using default)')
   console.log('  DATETIME_FORMAT:', process.env.DATETIME_FORMAT ? '✓ Set' : '✗ Not set (using default)')
+  console.log('  DEFAULT_README_LANGUAGE:', process.env.DEFAULT_README_LANGUAGE ? '✓ Set' : '✗ Not set (using default)')
   console.log('\nFinal Configuration Values:')
   console.log('  userPrincipalName:', module.exports.userPrincipalName)
   console.log('  icon:', module.exports.icon)
@@ -192,5 +199,6 @@ if (process.env.DEBUG_CONFIG === 'true') {
   console.log('  email:', module.exports.email)
   console.log('  links:', JSON.stringify(module.exports.links))
   console.log('  datetimeFormat:', module.exports.datetimeFormat)
+  console.log('  defaultReadmeLanguage:', module.exports.defaultReadmeLanguage)
   console.log('=== End Site Configuration ===\n')
 }
