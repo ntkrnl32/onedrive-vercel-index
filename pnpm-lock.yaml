@@ -51,8 +51,8 @@ dependencies:
     specifier: ^10.2.1
     version: 10.2.1
   i18next:
-    specifier: ^22.4.9
-    version: 22.4.9
+    specifier: ^22.5.1
+    version: 22.5.1
   ioredis:
     specifier: ^5.3.0
     version: 5.3.0
@@ -67,7 +67,7 @@ dependencies:
     version: 14.2.32(react-dom@18.2.0)(react@18.2.0)
   next-i18next:
     specifier: ^13.0.3
-    version: 13.0.3(i18next@22.4.9)(next@14.2.32)(react-i18next@12.1.4)(react@18.2.0)
+    version: 13.0.3(i18next@22.5.1)(next@14.2.32)(react-i18next@12.1.4)(react@18.2.0)
   nextjs-progressbar:
     specifier: ^0.0.16
     version: 0.0.16(next@14.2.32)(react@18.2.0)
@@ -103,7 +103,7 @@ dependencies:
     version: 4.3.3(react-dom@18.2.0)(react@18.2.0)
   react-i18next:
     specifier: ^12.1.4
-    version: 12.1.4(i18next@22.4.9)(react-dom@18.2.0)(react@18.2.0)
+    version: 12.1.4(i18next@22.5.1)(react-dom@18.2.0)(react@18.2.0)
   react-markdown:
     specifier: ^8.0.5
     version: 8.0.5(@types/react@18.2.14)(react@18.2.0)
@@ -208,6 +208,10 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       regenerator-runtime: 0.13.11
+
+  /@babel/runtime@7.28.4:
+    resolution: {integrity: sha512-Q/N6JNWvIvPnLDvjlE1OUBLPQHH6l3CltCEsHIujp45zQUSSh8K+gHnaEX45yAT1nyngnINhvWtzN+Nb9D8RAQ==}
+    engines: {node: '>=6.9.0'}
 
   /@esbuild/android-arm64@0.17.4:
     resolution: {integrity: sha512-91VwDrl4EpxBCiG6h2LZZEkuNvVZYJkv2T9gyLG/mhGG1qrM7i5SwUcg/hlSPnL/4hDT0TFcF35/XMGSn0bemg==}
@@ -2002,7 +2006,7 @@ packages:
     peerDependencies:
       eslint: ^3 || ^4 || ^5 || ^6 || ^7 || ^8
     dependencies:
-      '@babel/runtime': 7.20.13
+      '@babel/runtime': 7.28.4
       aria-query: 5.1.3
       array-includes: 3.1.6
       array.prototype.flatmap: 1.3.1
@@ -2728,7 +2732,7 @@ packages:
       esbuild: 0.17.4
       fs-extra: 11.1.0
       gulp-sort: 2.0.0
-      i18next: 22.4.9
+      i18next: 22.5.1
       js-yaml: 4.1.0
       lilconfig: 2.0.6
       rsvp: 4.8.5
@@ -2742,10 +2746,10 @@ packages:
       - supports-color
     dev: true
 
-  /i18next@22.4.9:
-    resolution: {integrity: sha512-8gWMmUz460KJDQp/ob3MNUX84cVuDRY9PLFPnV8d+Qezz/6dkjxwOaH70xjrCNDO+JrUL25iXfAIN9wUkInNZw==}
+  /i18next@22.5.1:
+    resolution: {integrity: sha512-8TGPgM3pAD+VRsMtUMNknRz3kzqwp/gPALrWMsDnmC1mKqJwpWyooQRLMcbTwq8z8YwSmuj+ZYvc+xCuEpkssA==}
     dependencies:
-      '@babel/runtime': 7.20.13
+      '@babel/runtime': 7.28.4
 
   /ignore@5.2.4:
     resolution: {integrity: sha512-MAb38BcSbH0eHNBxn7ql2NH/kX33OkB3lZ1BNdh7ENeRChHTYsTvWrMubiIAMNS2llXEEgZ1MUOBtXChP3kaFQ==}
@@ -3741,7 +3745,7 @@ packages:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
     dev: true
 
-  /next-i18next@13.0.3(i18next@22.4.9)(next@14.2.32)(react-i18next@12.1.4)(react@18.2.0):
+  /next-i18next@13.0.3(i18next@22.5.1)(next@14.2.32)(react-i18next@12.1.4)(react@18.2.0):
     resolution: {integrity: sha512-7AA8J6WbkxRBtSf1+97LSAE7btxWZHsBIJEJ3FuTSBgYtpRiO5NGjcb8XbNAlz6yGU0TtS+yZE+/Wu83KhIT1Q==}
     engines: {node: '>=14'}
     peerDependencies:
@@ -3754,11 +3758,11 @@ packages:
       '@types/hoist-non-react-statics': 3.3.1
       core-js: 3.27.2
       hoist-non-react-statics: 3.3.2
-      i18next: 22.4.9
+      i18next: 22.5.1
       i18next-fs-backend: 2.1.1
       next: 14.2.32(react-dom@18.2.0)(react@18.2.0)
       react: 18.2.0
-      react-i18next: 12.1.4(i18next@22.4.9)(react-dom@18.2.0)(react@18.2.0)
+      react-i18next: 12.1.4(i18next@22.5.1)(react-dom@18.2.0)(react@18.2.0)
     dev: false
 
   /next-tick@1.1.0:
@@ -4415,7 +4419,7 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
-  /react-i18next@12.1.4(i18next@22.4.9)(react-dom@18.2.0)(react@18.2.0):
+  /react-i18next@12.1.4(i18next@22.5.1)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-XQND7jYtgM7ht5PH3yIZljCRpAMTlH/zmngM9ZjToqa+0BR6xuu8c7QF0WIIOEjcMTB2S3iOfpN/xG/ZrAnO6g==}
     peerDependencies:
       i18next: '>= 19.0.0'
@@ -4430,7 +4434,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.20.13
       html-parse-stringify: 3.0.1
-      i18next: 22.4.9
+      i18next: 22.5.1
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
     dev: false
